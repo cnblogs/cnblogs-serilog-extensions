@@ -1,11 +1,3 @@
-#!/bin/bash
-dotnet --info
+#!/usr/bin/env bash
 dotnet restore
-
-for path in src/**/*.csproj; do
-    dotnet build -f netstandard2.0 -c Release ${path}
-done
-
-for path in test/*.Tests/*.csproj; do
-    dotnet test -f netcoreapp2.0 -c Release ${path}
-done
+dotnet build -c Release
