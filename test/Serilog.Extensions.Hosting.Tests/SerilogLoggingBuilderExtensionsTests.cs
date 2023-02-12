@@ -1,11 +1,12 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.Logging;
+using Serilog;
 using Serilog.Sinks.InMemory;
 using Serilog.Sinks.InMemory.Assertions;
 using Xunit;
 
-namespace Serilog.Extensions.Hosting.Tests;
+namespace Cnblogs.Serilog.Extensions.Tests;
 
 public class SerilogLoggingBuilderExtensionsTests
 {

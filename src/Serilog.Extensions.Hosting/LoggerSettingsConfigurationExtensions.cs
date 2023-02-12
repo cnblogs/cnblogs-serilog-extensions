@@ -13,11 +13,11 @@
 // limitations under the License.
 
 using System;
+using Serilog;
 using Serilog.Configuration;
 using Serilog.Core;
-using Serilog.Extensions.Hosting;
 
-namespace Serilog
+namespace Cnblogs.Serilog.Extensions
 {
     /// <summary>
     /// Extends <see cref="LoggerSettingsConfiguration"/> with methods for consuming host services.

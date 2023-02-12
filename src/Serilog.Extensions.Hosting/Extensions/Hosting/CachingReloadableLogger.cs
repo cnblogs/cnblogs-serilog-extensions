@@ -17,17 +17,18 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using Serilog;
 using Serilog.Core;
 using Serilog.Events;
 
-namespace Serilog.Extensions.Hosting
+namespace Cnblogs.Serilog.Extensions
 {
     class CachingReloadableLogger : ILogger, IReloadableLogger
     {
         readonly ReloadableLogger _reloadableLogger;
         readonly Func<ILogger, ILogger> _configure;
         readonly IReloadableLogger _parent;
-        
+
         ILogger _root, _cached;
         bool _frozen;
 
@@ -49,14 +50,14 @@ namespace Serilog.Extensions.Hosting
         public ILogger ForContext(ILogEventEnricher enricher)
         {
             if (enricher == null) return this;
-            
+
             if (_frozen)
                 return _cached.ForContext(enricher);
 
             if (_reloadableLogger.CreateChild(
                 _root,
                 this,
-                _cached, 
+                _cached,
                 p => p.ForContext(enricher),
                 out var child,
                 out var newRoot,
@@ -72,14 +73,14 @@ namespace Serilog.Extensions.Hosting
         public ILogger ForContext(IEnumerable<ILogEventEnricher> enrichers)
         {
             if (enrichers == null) return this;
-            
+
             if (_frozen)
                 return _cached.ForContext(enrichers);
 
             if (_reloadableLogger.CreateChild(
                 _root,
                 this,
-                _cached, 
+                _cached,
                 p => p.ForContext(enrichers),
                 out var child,
                 out var newRoot,
@@ -95,7 +96,7 @@ namespace Serilog.Extensions.Hosting
         public ILogger ForContext(string propertyName, object value, bool destructureObjects = false)
         {
             if (propertyName == null) return this;
-            
+
             if (_frozen)
                 return _cached.ForContext(propertyName, value, destructureObjects);
 
@@ -126,7 +127,7 @@ namespace Serilog.Extensions.Hosting
                     return this;
 
                 var enricher = new FixedPropertyEnricher(property);
-            
+
                 if (_reloadableLogger.CreateChild(
                     _root,
                     this,
@@ -148,11 +149,11 @@ namespace Serilog.Extensions.Hosting
         {
             if (_frozen)
                 return _cached.ForContext<TSource>();
-            
+
             if (_reloadableLogger.CreateChild(
                 _root,
                 this,
-                _cached, 
+                _cached,
                 p => p.ForContext<TSource>(),
                 out var child,
                 out var newRoot,
@@ -173,7 +174,7 @@ namespace Serilog.Extensions.Hosting
             if (_reloadableLogger.CreateChild(
                 _root,
                 this,
-                _cached, 
+                _cached,
                 p => p.ForContext(source),
                 out var child,
                 out var newRoot,
@@ -190,7 +191,7 @@ namespace Serilog.Extensions.Hosting
         {
             _root = newRoot;
             _cached = newCached;
-                
+
             // https://github.com/dotnet/runtime/issues/20500#issuecomment-284774431
             // Publish `_cached` and then `_frozen`. This is useful here because it means that once the logger is frozen - which
             // we always expect - reads don't require any synchronization/interlocked instructions.
@@ -486,7 +487,7 @@ namespace Serilog.Extensions.Hosting
 
             return isEnabled;
         }
-        
+
         public bool BindMessageTemplate(string messageTemplate, object[] propertyValues, out MessageTemplate parsedTemplate,
             out IEnumerable<LogEventProperty> boundProperties)
         {

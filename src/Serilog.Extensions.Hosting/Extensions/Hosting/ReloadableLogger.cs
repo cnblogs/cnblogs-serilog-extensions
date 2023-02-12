@@ -14,16 +14,17 @@
 
 #if !NO_RELOADABLE_LOGGER
 
+using Serilog;
+using Serilog.Core;
+using Serilog.Events;
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading;
-using Serilog.Core;
-using Serilog.Events;
 
 // ReSharper disable MemberCanBePrivate.Global
 
-namespace Serilog.Extensions.Hosting
+namespace Cnblogs.Serilog.Extensions
 {
     /// <summary>
     /// A Serilog <see cref="ILogger"/> that can be reconfigured without invalidating existing <see cref="ILogger"/>
@@ -33,7 +34,7 @@ namespace Serilog.Extensions.Hosting
     {
         readonly object _sync = new object();
         Logger _logger;
-        
+
         // One-way; if the value is `true` it can never again be made `false`, allowing "double-checked" reads. If
         // `true`, `_logger` is final and a memory barrier ensures the final value is seen by all threads.
         bool _frozen;
@@ -43,7 +44,7 @@ namespace Serilog.Extensions.Hosting
         {
             _logger = initial ?? throw new ArgumentNullException(nameof(initial));
         }
-        
+
         ILogger IReloadableLogger.ReloadLogger()
         {
             return _logger;
@@ -57,7 +58,7 @@ namespace Serilog.Extensions.Hosting
         public void Reload(Func<LoggerConfiguration, LoggerConfiguration> configure)
         {
             if (configure == null) throw new ArgumentNullException(nameof(configure));
-            
+
             lock (_sync)
             {
                 _logger.Dispose();
@@ -85,7 +86,7 @@ namespace Serilog.Extensions.Hosting
                 // Publish `_logger` and `_frozen`. This is useful here because it means that once the logger is frozen - which
                 // we always expect - reads don't require any synchronization/interlocked instructions.
                 Interlocked.MemoryBarrierProcessWide();
-                
+
                 return _logger;
             }
         }
@@ -101,7 +102,7 @@ namespace Serilog.Extensions.Hosting
         public ILogger ForContext(ILogEventEnricher enricher)
         {
             if (enricher == null) return this;
-            
+
             if (_frozen)
                 return _logger.ForContext(enricher);
 
@@ -113,7 +114,7 @@ namespace Serilog.Extensions.Hosting
         public ILogger ForContext(IEnumerable<ILogEventEnricher> enrichers)
         {
             if (enrichers == null) return this;
-            
+
             if (_frozen)
                 return _logger.ForContext(enrichers);
 
@@ -125,7 +126,7 @@ namespace Serilog.Extensions.Hosting
         public ILogger ForContext(string propertyName, object value, bool destructureObjects = false)
         {
             if (propertyName == null) return this;
-            
+
             if (_frozen)
                 return _logger.ForContext(propertyName, value, destructureObjects);
 
@@ -147,7 +148,7 @@ namespace Serilog.Extensions.Hosting
         public ILogger ForContext(Type source)
         {
             if (source == null) return this;
-            
+
             if (_frozen)
                 return _logger.ForContext(source);
 
@@ -335,7 +336,7 @@ namespace Serilog.Extensions.Hosting
                 return _logger.IsEnabled(level);
             }
         }
-        
+
         /// <inheritdoc />
         public bool BindMessageTemplate(string messageTemplate, object[] propertyValues, out MessageTemplate parsedTemplate,
             out IEnumerable<LogEventProperty> boundProperties)
@@ -370,7 +371,7 @@ namespace Serilog.Extensions.Hosting
         {
             // Synchronization on `_sync` is not required in this method; it will be called without a lock
             // if `_frozen` and under a lock if not.
-            
+
             if (_frozen)
             {
                 // If we're frozen, then the caller hasn't observed this yet and should update. We could optimize a little here
@@ -388,13 +389,13 @@ namespace Serilog.Extensions.Hosting
                 frozen = false;
                 return (cached, false);
             }
-        
+
             newRoot = _logger;
             newCached = caller.ReloadLogger();
             frozen = false;
             return (newCached, true);
         }
-        
+
         internal bool InvokeIsEnabled(ILogger root, ILogger cached, IReloadableLogger caller, LogEventLevel level, out bool isEnabled, out ILogger newRoot, out ILogger newCached, out bool frozen)
         {
             if (_frozen)
@@ -411,8 +412,8 @@ namespace Serilog.Extensions.Hosting
                 return update;
             }
         }
-        
-        internal bool InvokeBindMessageTemplate(ILogger root, ILogger cached, IReloadableLogger caller, string messageTemplate, 
+
+        internal bool InvokeBindMessageTemplate(ILogger root, ILogger cached, IReloadableLogger caller, string messageTemplate,
             object[] propertyValues, out MessageTemplate parsedTemplate, out IEnumerable<LogEventProperty> boundProperties,
             out bool canBind, out ILogger newRoot, out ILogger newCached, out bool frozen)
         {
@@ -430,8 +431,8 @@ namespace Serilog.Extensions.Hosting
                 return update;
             }
         }
-        
-        internal bool InvokeBindProperty(ILogger root, ILogger cached, IReloadableLogger caller, string propertyName, 
+
+        internal bool InvokeBindProperty(ILogger root, ILogger cached, IReloadableLogger caller, string propertyName,
             object propertyValue, bool destructureObjects, out LogEventProperty property,
             out bool canBind, out ILogger newRoot, out ILogger newCached, out bool frozen)
         {
@@ -503,7 +504,7 @@ namespace Serilog.Extensions.Hosting
                 return update;
             }
         }
-        
+
         internal bool InvokeWrite<T0, T1>(ILogger root, ILogger cached, IReloadableLogger caller, LogEventLevel level, string messageTemplate,
             T0 propertyValue0, T1 propertyValue1,
             out ILogger newRoot, out ILogger newCached, out bool frozen)
@@ -522,7 +523,7 @@ namespace Serilog.Extensions.Hosting
                 return update;
             }
         }
-        
+
         internal bool InvokeWrite<T0, T1, T2>(ILogger root, ILogger cached, IReloadableLogger caller, LogEventLevel level, string messageTemplate,
             T0 propertyValue0, T1 propertyValue1, T2 propertyValue2,
             out ILogger newRoot, out ILogger newCached, out bool frozen)
@@ -560,7 +561,7 @@ namespace Serilog.Extensions.Hosting
                 return update;
             }
         }
-        
+
         internal bool InvokeWrite(ILogger root, ILogger cached, IReloadableLogger caller, LogEventLevel level, Exception exception, string messageTemplate,
             out ILogger newRoot, out ILogger newCached, out bool frozen)
         {
@@ -597,7 +598,7 @@ namespace Serilog.Extensions.Hosting
                 return update;
             }
         }
-        
+
         internal bool InvokeWrite<T0, T1>(ILogger root, ILogger cached, IReloadableLogger caller, LogEventLevel level, Exception exception, string messageTemplate,
             T0 propertyValue0, T1 propertyValue1,
             out ILogger newRoot, out ILogger newCached, out bool frozen)
@@ -616,7 +617,7 @@ namespace Serilog.Extensions.Hosting
                 return update;
             }
         }
-        
+
         internal bool InvokeWrite<T0, T1, T2>(ILogger root, ILogger cached, IReloadableLogger caller, LogEventLevel level, Exception exception, string messageTemplate,
             T0 propertyValue0, T1 propertyValue1, T2 propertyValue2,
             out ILogger newRoot, out ILogger newCached, out bool frozen)
@@ -656,8 +657,8 @@ namespace Serilog.Extensions.Hosting
         }
 
         internal bool CreateChild(
-            ILogger root, 
-            IReloadableLogger parent, 
+            ILogger root,
+            IReloadableLogger parent,
             ILogger cachedParent,
             Func<ILogger, ILogger> configureChild,
             out ILogger child,

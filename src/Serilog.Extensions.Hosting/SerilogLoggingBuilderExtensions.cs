@@ -1,10 +1,9 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using Cnblogs.Serilog.Extensions;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
-using Serilog.Extensions.Hosting;
 using Serilog.Extensions.Logging;
 using System;
-using static Serilog.SerilogHostBuilderExtensions;
 
 namespace Microsoft.Extensions.Logging
 {
@@ -238,6 +237,31 @@ namespace Microsoft.Extensions.Logging
                 },
                 preserveStaticLogger: preserveStaticLogger,
                 writeToProviders: writeToProviders);
+        }
+
+        private static void ConfigureDiagnosticContext(IServiceCollection collection, bool useRegisteredLogger)
+        {
+            if (collection == null) throw new ArgumentNullException(nameof(collection));
+
+            // Registered to provide two services...
+            // Consumed by e.g. middleware
+            collection.AddSingleton(services =>
+            {
+                Serilog.ILogger logger = useRegisteredLogger ? services.GetRequiredService<RegisteredLogger>().Logger : null;
+                return new DiagnosticContext(logger);
+            });
+            // Consumed by user code
+            collection.AddSingleton<IDiagnosticContext>(services => services.GetRequiredService<DiagnosticContext>());
+        }
+
+        private class RegisteredLogger
+        {
+            public RegisteredLogger(Serilog.ILogger logger)
+            {
+                Logger = logger;
+            }
+
+            public Serilog.ILogger Logger { get; }
         }
     }
 }

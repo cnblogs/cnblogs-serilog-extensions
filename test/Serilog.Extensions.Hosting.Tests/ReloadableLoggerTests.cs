@@ -1,13 +1,12 @@
 ﻿#if !NO_RELOADABLE_LOGGER
 
-using System.Collections.Generic;
-using System.Linq;
+using Cnblogs.Serilog.Extensions.Tests.Support;
+using Serilog;
 using Serilog.Core;
 using Serilog.Events;
-using Serilog.Extensions.Hosting.Tests.Support;
 using Xunit;
 
-namespace Serilog.Extensions.Hosting.Tests
+namespace Cnblogs.Serilog.Extensions.Tests
 {
     public class ReloadableLoggerTests
     {
@@ -18,14 +17,14 @@ namespace Serilog.Extensions.Hosting.Tests
             var contextual = logger.ForContext<ReloadableLoggerTests>();
 
             var nested = contextual.ForContext("test", "test");
-            Assert.IsNotType<Core.Logger>(nested);
+            Assert.IsNotType<Logger>(nested);
 
             logger.Freeze();
 
             nested = contextual.ForContext("test", "test");
-            Assert.IsType<Core.Logger>(nested);
+            Assert.IsType<Logger>(nested);
         }
-        
+
         [Fact]
         public void CachingReloadableLoggerRemainsUsableAfterFreezing()
         {
@@ -51,9 +50,9 @@ namespace Serilog.Extensions.Hosting.Tests
             var limited = logger
                 .ForContext("X", 1)
                 .ForContext(Constants.SourceContextPropertyName, "Test.Stuff");
-            
+
             var notLimited = logger.ForContext<ReloadableLoggerTests>();
-            
+
             foreach (var context in new[] { limited, notLimited })
             {
                 // Suppressed by both sinks
@@ -61,11 +60,11 @@ namespace Serilog.Extensions.Hosting.Tests
 
                 // Suppressed by the limited logger
                 context.Information("Second");
-                
+
                 // Emitted by both loggers
                 context.Warning("Third");
             }
-            
+
             Assert.Equal(3, emittedEvents.Count);
             Assert.Equal(2, emittedEvents.Count(le => le.Level == LogEventLevel.Warning));
         }
@@ -74,7 +73,7 @@ namespace Serilog.Extensions.Hosting.Tests
         public void ReloadableLoggersRecordEnrichment()
         {
             var emittedEvents = new List<LogEvent>();
-            
+
             var logger = new LoggerConfiguration()
                 .WriteTo.Sink(new ListSink(emittedEvents))
                 .CreateBootstrapLogger();
@@ -82,23 +81,23 @@ namespace Serilog.Extensions.Hosting.Tests
             var outer = logger
                 .ForContext("A", new object());
             var inner = outer.ForContext("B", "test");
-            
+
             inner.Information("First");
-            
+
             logger.Reload(lc => lc.WriteTo.Sink(new ListSink(emittedEvents)));
-            
+
             inner.Information("Second");
 
             logger.Freeze();
-            
+
             inner.Information("Third");
-            
+
             outer.ForContext("B", "test").Information("Fourth");
-            
+
             logger.ForContext("A", new object())
                 .ForContext("B", "test")
                 .Information("Fifth");
-            
+
             Assert.Equal(5, emittedEvents.Count);
             Assert.All(emittedEvents, e => Assert.Equal(2, e.Properties.Count));
         }

@@ -2,17 +2,17 @@
 using System.Collections.Generic;
 using Serilog.Events;
 
-namespace Serilog.Extensions.Hosting
+namespace Cnblogs.Serilog.Extensions
 {
     /// <summary>
     /// A container that receives properties added to a diagnostic context.
     /// </summary>
     public sealed class DiagnosticContextCollector : IDisposable
     {
-        readonly IDisposable _chainedDisposable;
-        readonly object _propertiesLock = new object();
-        Exception _exception;
-        Dictionary<string, LogEventProperty> _properties = new Dictionary<string, LogEventProperty>();
+        private readonly IDisposable _chainedDisposable;
+        private readonly object _propertiesLock = new object();
+        private Exception _exception;
+        private Dictionary<string, LogEventProperty> _properties = new Dictionary<string, LogEventProperty>();
 
         /// <summary>
         /// Construct a <see cref="DiagnosticContextCollector"/>.
@@ -84,7 +84,7 @@ namespace Serilog.Extensions.Hosting
         /// <param name="exception">The collected exception, or null if none has been collected or if no collection is active.</param>
         /// <returns>True if properties could be collected.</returns>
         /// <seealso cref="IDiagnosticContext.Set"/>
-        /// <seealso cref="Serilog.IDiagnosticContext.SetException"/>
+        /// <seealso cref="IDiagnosticContext.SetException"/>
         public bool TryComplete(out IEnumerable<LogEventProperty> properties, out Exception exception)
         {
             lock (_propertiesLock)

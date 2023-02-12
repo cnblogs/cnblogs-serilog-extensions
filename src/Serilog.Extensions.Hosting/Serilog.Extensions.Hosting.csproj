@@ -8,17 +8,15 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <AssemblyName>Cnblogs.Serilog.Extensions</AssemblyName>
-    <AssemblyOriginatorKeyFile>../../assets/Serilog.snk</AssemblyOriginatorKeyFile>
     <SignAssembly>true</SignAssembly>
-    <PublicSign Condition=" '$(OS)' != 'Windows_NT' ">true</PublicSign>
     <PackageId>Cnblogs.Serilog.Extensions</PackageId>
-    <PackageTags>serilog</PackageTags>
+    <PackageTags>serilog;logging</PackageTags>
     <PackageProjectUrl>https://github.com/cnblogs/cnblogs-serilog-extensions</PackageProjectUrl>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <RepositoryUrl>https://github.com/cnblogs/cnblogs-serilog-extensions</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <GenerateAssemblyVersionAttribute>false</GenerateAssemblyVersionAttribute>
-    <RootNamespace>Serilog</RootNamespace>
+    <RootNamespace>Cnblogs.Serilog.Extensions</RootNamespace>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">

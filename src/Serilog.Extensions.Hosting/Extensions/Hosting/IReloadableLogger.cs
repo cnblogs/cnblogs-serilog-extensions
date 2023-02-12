@@ -12,9 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-namespace Serilog.Extensions.Hosting
+using Serilog;
+
+namespace Cnblogs.Serilog.Extensions
 {
-    interface IReloadableLogger
+    internal interface IReloadableLogger
     {
         ILogger ReloadLogger();
     }

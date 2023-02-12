@@ -1,14 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading;
+﻿using Serilog;
 using Serilog.Events;
 
-namespace Serilog.Extensions.Hosting.Tests.Support
+namespace Cnblogs.Serilog.Extensions.Tests.Support
 {
-    static class Some
+    internal static class Some
     {
-        static int _next;
+        private static int _next;
 
         public static int Int32() => Interlocked.Increment(ref _next);
 

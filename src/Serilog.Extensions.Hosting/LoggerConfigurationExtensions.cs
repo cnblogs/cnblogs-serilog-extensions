@@ -14,11 +14,9 @@
 
 #if !NO_RELOADABLE_LOGGER
 
-using Microsoft.Extensions.Hosting;
-using Serilog.Extensions.Hosting;
-using System;
+using Serilog;
 
-namespace Serilog
+namespace Cnblogs.Serilog.Extensions
 {
     /// <summary>
     /// Extends <see cref="LoggerConfiguration"/>.
@@ -27,7 +25,6 @@ namespace Serilog
     {
         /// <summary>
         /// Create a <see cref="ReloadableLogger"/> for use during host bootstrapping. The
-        /// <see cref="SerilogHostBuilderExtensions.UseSerilog(IHostBuilder, Action{HostBuilderContext, IServiceProvider, LoggerConfiguration}, bool, bool)"/>
         /// configuration overload will detect when <see cref="Log.Logger"/> is set to a <see cref="ReloadableLogger"/> instance, and
         /// reconfigure/freeze it so that <see cref="ILogger"/>s created during host bootstrapping continue to work once
         /// logger configuration (with access to host services) is completed.
