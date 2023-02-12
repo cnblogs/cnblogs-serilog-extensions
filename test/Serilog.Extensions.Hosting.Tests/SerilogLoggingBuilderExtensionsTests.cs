@@ -10,7 +10,7 @@ namespace Serilog.Extensions.Hosting.Tests;
 public class SerilogLoggingBuilderExtensionsTests
 {
     [Fact]
-    public async Task LoggingBuilderExtensions_AddSerilog_SuccessAsync()
+    public async Task SerilogLoggingBuilderExtensions_AddSerilog_SuccessAsync()
     {
         // Arrange
         var builder = WebApplication.CreateBuilder();
