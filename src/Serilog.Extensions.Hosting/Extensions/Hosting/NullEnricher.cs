@@ -15,7 +15,7 @@
 using Serilog.Core;
 using Serilog.Events;
 
-namespace Serilog.Extensions.Hosting
+namespace Cnblogs.Serilog.Extensions
 {
     // Does nothing, but makes it easy to create an `ILogger` from a Serilog `Logger`
     // that will not dispose the underlying pipeline when disposed itself.

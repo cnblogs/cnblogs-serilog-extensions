@@ -15,7 +15,7 @@
 using System;
 using System.Threading;
 
-namespace Serilog.Extensions.Hosting
+namespace Cnblogs.Serilog.Extensions
 {
     class AmbientDiagnosticContextCollector : IDisposable
     {

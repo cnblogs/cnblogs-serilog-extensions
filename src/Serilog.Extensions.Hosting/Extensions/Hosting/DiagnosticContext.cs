@@ -12,10 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using Serilog;
 using System;
 using System.Threading;
 
-namespace Serilog.Extensions.Hosting
+namespace Cnblogs.Serilog.Extensions
 {
     /// <summary>
     /// Implements an ambient diagnostic context using <see cref="AsyncLocal{T}"/>.
@@ -23,7 +24,7 @@ namespace Serilog.Extensions.Hosting
     /// <remarks>Consumers should use <see cref="IDiagnosticContext"/> to set context properties.</remarks>
     public sealed class DiagnosticContext : IDiagnosticContext
     {
-        readonly ILogger _logger;
+        private readonly ILogger _logger;
 
         /// <summary>
         /// Construct a <see cref="DiagnosticContext"/>.
@@ -50,7 +51,7 @@ namespace Serilog.Extensions.Hosting
             if (propertyName == null) throw new ArgumentNullException(nameof(propertyName));
 
             var collector = AmbientDiagnosticContextCollector.Current;
-            if (collector != null && 
+            if (collector != null &&
                 (_logger ?? Log.Logger).BindProperty(propertyName, value, destructureObjects, out var property))
             {
                 collector.AddOrUpdate(property);

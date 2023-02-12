@@ -1,9 +1,9 @@
-using System;
-using System.IO;
-using Microsoft.Extensions.Configuration;
+using Cnblogs.Serilog.Extensions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Serilog;
+using System;
 
 namespace SimpleServiceSample
 {
@@ -36,9 +36,10 @@ namespace SimpleServiceSample
         public static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
                 .ConfigureServices(services => services.AddHostedService<PrintTimeService>())
-                .UseSerilog((context, services, loggerConfiguration) => loggerConfiguration
-                    .ReadFrom.Configuration(context.Configuration)
+                .ConfigureLogging((context, logging) =>
+                    logging.AddSerilog((conf, loggerConfiguration) => loggerConfiguration
+                    .ReadFrom.Configuration(conf)
                     .Enrich.FromLogContext()
-                    .WriteTo.Console());
+                    .WriteTo.Console()));
     }
 }

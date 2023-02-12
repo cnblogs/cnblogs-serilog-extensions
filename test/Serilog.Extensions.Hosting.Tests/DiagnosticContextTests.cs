@@ -1,13 +1,11 @@
-﻿using System;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using Serilog;
 using Serilog.Events;
-using Serilog.Extensions.Hosting.Tests.Support;
+using Cnblogs.Serilog.Extensions.Tests.Support;
 using Xunit;
 
 // ReSharper disable PossibleNullReferenceException
 
-namespace Serilog.Extensions.Hosting.Tests
+namespace Cnblogs.Serilog.Extensions.Tests
 {
     public class DiagnosticContextTests
     {

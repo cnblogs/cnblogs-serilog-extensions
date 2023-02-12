@@ -14,7 +14,8 @@
 
 using System;
 
-namespace Serilog
+namespace 
+ Cnblogs.Serilog.Extensions
 {
     /// <summary>
     /// Collects diagnostic information for packaging into wide events.
