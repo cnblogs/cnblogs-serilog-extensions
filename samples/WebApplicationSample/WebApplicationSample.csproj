@@ -5,7 +5,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\..\src\Serilog.Extensions.Hosting\Serilog.Extensions.Hosting.csproj" />
+      <ProjectReference Include="..\..\src\Cnblogs.Serilog.Extensions\Cnblogs.Serilog.Extensions.csproj" />
     </ItemGroup>
 
     <ItemGroup>
