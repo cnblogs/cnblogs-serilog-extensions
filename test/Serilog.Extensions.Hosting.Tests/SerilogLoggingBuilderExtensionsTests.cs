@@ -10,20 +10,35 @@ namespace Serilog.Extensions.Hosting.Tests;
 public class SerilogLoggingBuilderExtensionsTests
 {
     [Fact]
-    public async Task SerilogLoggingBuilderExtensions_AddSerilog_SuccessAsync()
+    public async Task LoggingBuilderExtensions_AddSerilog_SuccessAsync()
     {
         // Arrange
         var builder = WebApplication.CreateBuilder();
-        var logger = new LoggerConfiguration()
-            .WriteTo.InMemory()
-            .CreateLogger();
-        builder.Logging.AddSerilog(logger);
+        builder.Logging.AddSerilog(logger => logger.WriteTo.InMemory());
         builder.WebHost.UseTestServer();
         var app = builder.Build();
 
         // Act
-        var message = "Hello World!";
-        app.Logger.LogInformation("Hello World!");
+        var message = "Logging in memory";
+        app.Logger.LogInformation(message);
+        await app.StartAsync();
+
+        // Assert
+        InMemorySink.Instance.Should().HaveMessage(message);
+    }
+
+    [Fact]
+    public async Task LoggingBuilderExtensions_AddSerilogWithAppsettings_SuccessAsync()
+    {
+        // Arrange
+        var builder = WebApplication.CreateBuilder();
+        builder.Logging.AddSerilog((appConfig, loggerConfig) => loggerConfig.ReadFrom.Configuration(appConfig));
+        builder.WebHost.UseTestServer();
+        var app = builder.Build();
+
+        // Act
+        var message = "Logging in memory with appsettings.json";
+        app.Logger.LogInformation(message);
         await app.StartAsync();
 
         // Assert

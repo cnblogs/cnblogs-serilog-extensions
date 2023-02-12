@@ -1,4 +1,7 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Serilog;
+using Serilog.Extensions.Hosting;
 using Serilog.Extensions.Logging;
 using System;
 using static Serilog.SerilogHostBuilderExtensions;
@@ -21,7 +24,7 @@ namespace Microsoft.Extensions.Logging
         /// <param name="providers">A <see cref="LoggerProviderCollection"/> registered in the Serilog pipeline using the
         /// <c>WriteTo.Providers()</c> configuration method, enabling other <see cref="Microsoft.Extensions.Logging.ILoggerProvider"/>s to receive events. By
         /// default, only Serilog sinks will receive events.</param>
-        /// <returns>The host builder.</returns>
+        /// <returns>The logging builder.</returns>
         public static ILoggingBuilder AddSerilog(
             this ILoggingBuilder builder,
             Serilog.ILogger logger = null,
@@ -60,6 +63,181 @@ namespace Microsoft.Extensions.Logging
             ConfigureDiagnosticContext(services, useRegisteredLogger);
 
             return builder;
+        }
+
+        /// <summary>Sets Serilog as the logging provider.</summary>
+        /// <remarks>
+        /// A <see cref="ILoggingBuilder"/> is supplied so that configuration and hosting information can be used.
+        /// The logger will be shut down when application services are disposed.
+        /// </remarks>
+        /// <param name="builder">The logging builder to configure.</param>
+        /// <param name="configureLogger">The delegate for configuring the <see cref="Serilog.LoggerConfiguration" /> that will be used to construct a <see cref="Serilog.Core.Logger" />.</param>
+        /// <param name="preserveStaticLogger">Indicates whether to preserve the value of <see cref="Serilog.Log.Logger"/>.</param>
+        /// <param name="writeToProviders">By default, Serilog does not write events to <see cref="ILoggerProvider"/>s registered through
+        /// the Microsoft.Extensions.Logging API. Normally, equivalent Serilog sinks are used in place of providers. Specify
+        /// <c>true</c> to write events to all providers.</param>
+        /// <remarks>If the static <see cref="Log.Logger"/> is a bootstrap logger (see
+        /// <c>LoggerConfigurationExtensions.CreateBootstrapLogger()</c>), and <paramref name="preserveStaticLogger"/> is
+        /// not specified, the the bootstrap logger will be reconfigured through the supplied delegate, rather than being
+        /// replaced entirely or ignored.</remarks>
+        /// <returns>The logging builder.</returns>
+        public static ILoggingBuilder AddSerilogFactory(
+             this ILoggingBuilder builder,
+             Action<IServiceProvider, LoggerConfiguration> configureLogger,
+             bool preserveStaticLogger = false,
+             bool writeToProviders = false)
+        {
+            if (builder == null) throw new ArgumentNullException(nameof(builder));
+            if (configureLogger == null) throw new ArgumentNullException(nameof(configureLogger));
+
+            // This check is eager; replacing the bootstrap logger after calling this method is not supported.
+#if !NO_RELOADABLE_LOGGER
+            var reloadable = Log.Logger as ReloadableLogger;
+            var useReload = reloadable != null && !preserveStaticLogger;
+#else
+            const bool useReload = false;
+#endif
+            var services = builder.Services;
+
+            LoggerProviderCollection loggerProviders = null;
+            if (writeToProviders)
+            {
+                loggerProviders = new LoggerProviderCollection();
+            }
+
+            services.AddSingleton(sp =>
+            {
+                Serilog.ILogger logger;
+#if !NO_RELOADABLE_LOGGER
+                if (useReload)
+                {
+                    reloadable!.Reload(cfg =>
+                    {
+                        if (loggerProviders != null)
+                            cfg.WriteTo.Providers(loggerProviders);
+
+                        configureLogger(sp, cfg);
+                        return cfg;
+                    });
+
+                    logger = reloadable.Freeze();
+                }
+                else
+#endif
+                {
+                    var loggerConfiguration = new LoggerConfiguration();
+
+                    if (loggerProviders != null)
+                        loggerConfiguration.WriteTo.Providers(loggerProviders);
+
+                    configureLogger(sp, loggerConfiguration);
+                    logger = loggerConfiguration.CreateLogger();
+                }
+
+                return new RegisteredLogger(logger);
+            });
+
+            services.AddSingleton(sp =>
+            {
+                // How can we register the logger, here, but not have MEDI dispose it?
+                // Using the `NullEnricher` hack to prevent disposal.
+                var logger = sp.GetRequiredService<RegisteredLogger>().Logger;
+                return logger.ForContext(new NullEnricher());
+            });
+
+            services.AddSingleton<ILoggerFactory>(sp =>
+            {
+                var logger = sp.GetRequiredService<RegisteredLogger>().Logger;
+
+                Serilog.ILogger registeredLogger = null;
+                if (preserveStaticLogger)
+                {
+                    registeredLogger = logger;
+                }
+                else
+                {
+                    // Passing a `null` logger to `SerilogLoggerFactory` results in disposal via
+                    // `Log.CloseAndFlush()`, which additionally replaces the static logger with a no-op.
+                    Log.Logger = logger;
+                }
+
+                var factory = new SerilogLoggerFactory(registeredLogger, !useReload, loggerProviders);
+
+                if (writeToProviders)
+                {
+                    foreach (var provider in sp.GetServices<ILoggerProvider>())
+                        factory.AddProvider(provider);
+                }
+
+                return factory;
+            });
+
+            ConfigureDiagnosticContext(services, preserveStaticLogger);
+
+            return builder;
+        }
+
+        /// <summary>Sets Serilog as the logging provider.</summary>
+        /// <remarks>
+        /// A <see cref="ILoggingBuilder"/> is supplied so that configuration and hosting information can be used.
+        /// The logger will be shut down when application services are disposed.
+        /// </remarks>
+        /// <param name="builder">The logging builder to configure.</param>
+        /// <param name="configureLogger">The delegate for configuring the <see cref="Serilog.LoggerConfiguration" /> that will be used to construct a <see cref="Serilog.Core.Logger" />.</param>
+        /// <param name="preserveStaticLogger">Indicates whether to preserve the value of <see cref="Serilog.Log.Logger"/>.</param>
+        /// <param name="writeToProviders">By default, Serilog does not write events to <see cref="ILoggerProvider"/>s registered through
+        /// the Microsoft.Extensions.Logging API. Normally, equivalent Serilog sinks are used in place of providers. Specify
+        /// <c>true</c> to write events to all providers.</param>
+        /// <returns>The logging builder.</returns>
+        public static ILoggingBuilder AddSerilog(
+            this ILoggingBuilder builder,
+            Action<IConfiguration, LoggerConfiguration> configureLogger,
+            bool preserveStaticLogger = false,
+            bool writeToProviders = false)
+        {
+            if (builder == null) throw new ArgumentNullException(nameof(builder));
+            if (configureLogger == null) throw new ArgumentNullException(nameof(configureLogger));
+
+            return AddSerilogFactory(
+                builder,
+                (sp, loggerConfiguration) =>
+                {
+                    var configuration = sp.GetRequiredService<IConfiguration>();
+                    configureLogger(configuration, loggerConfiguration);
+                },
+                preserveStaticLogger: preserveStaticLogger,
+                writeToProviders: writeToProviders);
+        }
+
+        /// <summary>Sets Serilog as the logging provider.</summary>
+        /// <remarks>
+        /// A <see cref="ILoggingBuilder"/> is supplied so that configuration and hosting information can be used.
+        /// The logger will be shut down when application services are disposed.
+        /// </remarks>
+        /// <param name="builder">The logging builder to configure.</param>
+        /// <param name="configureLogger">The delegate for configuring the <see cref="Serilog.LoggerConfiguration" /> that will be used to construct a <see cref="Serilog.Core.Logger" />.</param>
+        /// <param name="preserveStaticLogger">Indicates whether to preserve the value of <see cref="Serilog.Log.Logger"/>.</param>
+        /// <param name="writeToProviders">By default, Serilog does not write events to <see cref="ILoggerProvider"/>s registered through
+        /// the Microsoft.Extensions.Logging API. Normally, equivalent Serilog sinks are used in place of providers. Specify
+        /// <c>true</c> to write events to all providers.</param>
+        /// <returns>The logging builder.</returns>
+        public static ILoggingBuilder AddSerilog(
+            this ILoggingBuilder builder,
+            Action<LoggerConfiguration> configureLogger,
+            bool preserveStaticLogger = false,
+            bool writeToProviders = false)
+        {
+            if (builder == null) throw new ArgumentNullException(nameof(builder));
+            if (configureLogger == null) throw new ArgumentNullException(nameof(configureLogger));
+
+            return AddSerilogFactory(
+                builder,
+                (sp, loggerConfiguration) =>
+                {
+                    configureLogger(loggerConfiguration);
+                },
+                preserveStaticLogger: preserveStaticLogger,
+                writeToProviders: writeToProviders);
         }
     }
 }
