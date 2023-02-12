@@ -36,10 +36,9 @@ namespace SimpleServiceSample
         public static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
                 .ConfigureServices(services => services.AddHostedService<PrintTimeService>())
-                .ConfigureLogging((context, logging) =>
-                    logging.AddSerilog((conf, loggerConfiguration) => loggerConfiguration
+                .AddSerilog((conf, loggerConfiguration) => loggerConfiguration
                     .ReadFrom.Configuration(conf)
                     .Enrich.FromLogContext()
-                    .WriteTo.Console()));
+                    .WriteTo.Console());
     }
 }
