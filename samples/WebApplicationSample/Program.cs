@@ -41,11 +41,10 @@ namespace WebApplicationSample
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
-                .ConfigureLogging((context, logging) =>
-                    logging.AddSerilogFactory((services, loggerConfig) => loggerConfig
+                .AddSerilog((conf, services, loggerConfig) => loggerConfig
                     .WriteTo.Console()
-                    .ReadFrom.Configuration(context.Configuration)
-                    .ReadFrom.Services(services)))
+                    .ReadFrom.Configuration(conf)
+                    .ReadFrom.Services(services))
                 .ConfigureWebHostDefaults(webBuilder => { webBuilder.UseStartup<Startup>(); });
     }
 }
