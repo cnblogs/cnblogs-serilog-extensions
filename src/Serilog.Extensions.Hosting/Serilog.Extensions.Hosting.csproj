@@ -1,20 +1,18 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <Description>Serilog support for .NET Core logging in hosted services</Description>
-    <VersionPrefix>5.0.1</VersionPrefix>
-    <Authors>Microsoft;Serilog Contributors</Authors>
+    <Description>Extensions for Serilog</Description>
+    <Authors>Serilog Contributors</Authors>
     <TargetFrameworks>netstandard2.0;netstandard2.1;net6.0;net7.0</TargetFrameworks>
     <LangVersion>latest</LangVersion>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <AssemblyName>Serilog.Extensions.Hosting</AssemblyName>
+    <AssemblyName>Cnblogs.Serilog.Extensions</AssemblyName>
     <AssemblyOriginatorKeyFile>../../assets/Serilog.snk</AssemblyOriginatorKeyFile>
     <SignAssembly>true</SignAssembly>
     <PublicSign Condition=" '$(OS)' != 'Windows_NT' ">true</PublicSign>
-    <PackageId>Serilog.Extensions.Hosting</PackageId>
-    <PackageTags>serilog;aspnet;aspnetcore;hosting</PackageTags>
-    <PackageIcon>icon.png</PackageIcon>
+    <PackageId>Cnblogs.Serilog.Extensions</PackageId>
+    <PackageTags>serilog</PackageTags>
     <PackageProjectUrl>https://github.com/cnblogs/cnblogs-serilog-extensions</PackageProjectUrl>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <RepositoryUrl>https://github.com/cnblogs/cnblogs-serilog-extensions</RepositoryUrl>
